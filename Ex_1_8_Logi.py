@@ -1,6 +1,8 @@
+from collections import defaultdict
+
 id_to_logged_in_time = {}
-id_to_login_times = {}
-id_to_logout_times = {}
+id_to_login_times = defaultdict(list)
+id_to_logout_times = defaultdict(list)
 
 with open('logs.txt') as log_file:
     for line in log_file:
@@ -9,25 +11,23 @@ with open('logs.txt') as log_file:
         user_id = int(user_id)
 
         if operation == 'LOGIN':
-            if user_id not in id_to_login_times:
-                id_to_login_times[user_id] = []
             id_to_login_times[user_id].append(int(timestamp))
-
         elif operation == 'LOGOUT':
-            if user_id not in id_to_logout_times:
-                id_to_logout_times[user_id] = []
             id_to_logout_times[user_id].append(int(timestamp))
 
-
-for id in id_to_login_times.keys():
+for id in id_to_login_times:
     logged_in_time_for_user = 0
-
-    assert len(id_to_login_times) == len(id_to_logout_times), \
-        f"There needs to be the same amount of logins as logouts {len(id_to_login_times)} != {len(id_to_logout_times)} for given user: {id}"
+    if len(id_to_login_times) != len(id_to_logout_times):
+        print(f"Nieprawidłowe dane w pliku. Różna ilość LOGIN i LOGOUT: {len(id_to_login_times)} != {len(id_to_logout_times)}")
+        break
 
     for login, logout in zip(id_to_login_times[id], id_to_logout_times[id]):
-        assert logout > login, "Invalid entries in file"
+        if login > logout:
+            print(f'Nieprawidłowe dane wejściowe w pliku dla: user-{id}. Logout: {logout}, Login: {login}')
+            break
+
         logged_in_time_for_user += logout - login
+
     id_to_logged_in_time[id] = logged_in_time_for_user
 
 for id in sorted(id_to_logged_in_time.keys()):
